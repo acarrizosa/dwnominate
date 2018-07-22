@@ -312,7 +312,7 @@ dwnominate = function(rc_list, id=NULL, start=NULL, sessions=NULL,
     sessions = c(1, nrc)
   if (any(sessions < 1) || any(sessions > nrc))
     stop('sessions must be between 1 and length(rc_list)')
-  iters = c(1, niter + 1)
+  iters = c(1, niter)
   # should check that membership overlaps
   
   parties = unique(unlist(lapply(rc_list,
