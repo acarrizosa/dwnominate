@@ -196,19 +196,19 @@ write_input_files = function(rc_list, start, sessions, dims,
 
 make_leg_df = function(res, params, party_dict) {
   ## organize legislator data
-  ndims = res[[1]][1]
+  ndims = res[[1]]
   coords = paste0('coord', 1:ndims, 'D')
   if (ndims == 1) {
-    leg_data = c(res[13:14], params[c('istate', 'idist', 'ksta', 'iparty', 'lname')],
-                 res[20], res[25:28])
+    leg_data = c(res[16:17], params[c('istate', 'idist', 'ksta', 'iparty', 'lname')],
+                 res[23], res[28:31])
     legnames = c('session', 'ID', 'stateID', 'district', 'state', 
                  'partyID', 'name', coords,
                  'loglikelihood', 'loglikelihood_check', 'numVotes', 'numVotes_check',
                  'numErrors', 'numErrors_check',
                  'GMP', 'GMP_check')
   } else {
-    leg_data = c(res[13:14], params[c('istate', 'idist', 'ksta', 'iparty', 'lname')],
-                 res[20:28])
+    leg_data = c(res[16:17], params[c('istate', 'idist', 'ksta', 'iparty', 'lname')],
+                 res[23:31])
     ses = paste0('se', 1:ndims, 'D')
     vars = paste0('var', 1:ndims, 'D')
     legnames = c('session', 'ID', 'stateID', 'district', 'state', 
@@ -225,9 +225,9 @@ make_leg_df = function(res, params, party_dict) {
 
 make_rc_df = function(res, params) {
   ## organize rollcall data
-  df = cbind.data.frame(res[[4]], params$inum, res[[30]], res[[29]])
+  df = cbind.data.frame(res[[7]], params$inum, res[[33]], res[[32]])
   ## fix df names
-  ndims = res[[1]][1]
+  ndims = res[[1]]
   midcols = paste0('midpoint', 1:ndims, 'D')
   spreadcols = paste0('spread', 1:ndims, 'D')
   est_cols = c(midcols, spreadcols)
@@ -379,7 +379,9 @@ dwnominate = function(rc_list, id=NULL, start=NULL, sessions=NULL,
   zmid = matrix(0.0, nrow=nbills, ncol=dims)
   res = .Fortran('dwnom',
            ## control file (DW-NOMSTART.DAT) params:
-           params$nomstart_in, params$weights,
+           params$nomstart_in[1], params$nomstart_in[2],
+           params$nomstart_in[4], params$nomstart_in[6],
+           params$weights,
            ## bill file (rollcall_input.dat) params:
            nbills, params$icong, params$dyn, params$zmid,
            ## session file (session_info.num) params:
