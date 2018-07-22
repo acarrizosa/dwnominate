@@ -60,7 +60,7 @@ C     with minor changes by William May for use with R
      C               WEIGHT(99),NUMCONGT(200),
      C               ILEGCONG(54001),KWHERE(99999,111),
      C               XBIGLOG(54001,2),KBIGLOG(54001,4)
-      COMMON /MINE/ NS,NQTOT,NPTOT
+      COMMON /MINE/ NDIM,NQTOT,NPTOT
       COMMON /dists/ WDERV(99),ZDF(150000,4),NDEVIT,XDEVIT
       CHARACTER*64 FTITLE
       INTEGER*2 ITIM1,ITIM2,ITIM3,ITIM4,JTIM1,JTIM2,JTIM3,JTIM4
@@ -120,17 +120,17 @@ C  READ TITLE OF RUN
 C
       FTITLE = 'NOMINAL DYNAMIC-WEIGHTED MULTIDIMENSIONAL UNFOLDING '
       WRITE(*,102)FTITLE
-      NS = NOMSTARTIN(1)
+      NDIM = NOMSTARTIN(1)
       NMODEL = NOMSTARTIN(2)
       NFIRST = NOMSTARTIN(3)
       NLAST = NOMSTARTIN(4)
       IHAPPY1 = NOMSTARTIN(5)
       IHAPPY2 = NOMSTARTIN(6)
-      WRITE(*,103)NS,NMODEL,NFIRST,NLAST,IHAPPY1,IHAPPY2
+      WRITE(*,103)NDIM,NMODEL,NFIRST,NLAST,IHAPPY1,IHAPPY2
       WEIGHT = WEIGHTSIN
-      WRITE(*,104)WEIGHT(NS+1),(WEIGHT(K),K=2,NS)
+      WRITE(*,104)WEIGHT(NDIM+1),(WEIGHT(K),K=2,NDIM)
 C
-C      NS=2
+C      NDIM=2
 C      NMODEL=0
 C      NFIRST=1
 C      NLAST=57
@@ -143,7 +143,7 @@ C      WEIGHT(2)=.50
 C
 C  SIGMA-SQUARED (BETA)
 C  
-C      WEIGHT(NS+1)=4.925
+C      WEIGHT(NDIM+1)=4.925
 C
       DO 46 J=1,111
       DO 47 I=1,99999
@@ -270,7 +270,7 @@ C
 C  ************************************
 C     DIMENSION WEIGHT PHASE
 C  ************************************
-      IF(NS.GE.2)THEN
+      IF(NDIM.GE.2)THEN
          WRITE(*,320)'dimension weights'
          CALL WINT(XPLOG,NFIRST,NLAST)
       ENDIF
@@ -321,7 +321,7 @@ C
       LL(I)=I
       LDATA(I,1)=0
       YSS(I)=XMAT(I,1)
-      DO 4444 K=1,NS
+      DO 4444 K=1,NDIM
       XMAT(I,K)=XDATA(I+KTOTP,K)
  4444 CONTINUE
       IF(RCVOTE9(I+KTOTP,J).NEQV.RCVOTET9(J+KTOTQ,I))THEN
@@ -364,7 +364,7 @@ C      RCBAD(KK)=.FALSE.
       IF(KRCTOT.GT.0)THEN
          XMARG=FLOAT(KRCMIN)/FLOAT(KRCTOT)
          IF(XMARG.LT..025)THEN
-            DO 625 K=1,NS
+            DO 625 K=1,NDIM
             ZMID(NEQ+KTOTQ,K)=0.0
             DYN(NEQ+KTOTQ,K)=0.0
   625       CONTINUE
@@ -377,20 +377,20 @@ C
 C  DO CHECK ON MIDPOINT TO MAKE SURE ITS WITHIN THE UNIT HYPERSPHERE
 C
             SUM=0.0
-            DO 23 K=1,NS
+            DO 23 K=1,NDIM
             SUM=SUM+ZMID(NEQ+KTOTQ,K)**2
   23        CONTINUE
             IF(SUM.GT.1.0)THEN
-               DO 24 K=1,NS
+               DO 24 K=1,NDIM
                ZMID(NEQ+KTOTQ,K)=ZMID(NEQ+KTOTQ,K)/SQRT(SUM)
   24           CONTINUE
             ENDIF
-            DO 21 K=1,NS
+            DO 21 K=1,NDIM
             IF(ABS(OLDD(K)).GT.2.0)THEN
                OLDD(K)=(OLDD(K))/ABS(OLDD(K))
             ENDIF
-            OLDZ(K+NS)=ZMID(NEQ+KTOTQ,K)
-            OLDD(K+NS)=DYN(NEQ+KTOTQ,K)
+            OLDZ(K+NDIM)=ZMID(NEQ+KTOTQ,K)
+            OLDD(K+NDIM)=DYN(NEQ+KTOTQ,K)
             OLDZ(K)=ZMID(NEQ+KTOTQ,K)
             OLDD(K)=DYN(NEQ+KTOTQ,K)
   21        CONTINUE
@@ -398,7 +398,7 @@ C
 C  GET INITIAL CLASSIFICATION AND LOG-LIKELIHOOD
 C
 C
-            IF(NS.EQ.1)THEN
+            IF(NDIM.EQ.1)THEN
               IVOT=1
               KCCUT=1
               LCCUT=6
@@ -445,21 +445,21 @@ C
 C       CALL CUTTING PLANE ROUTINE TO GET PROPER POLARITIES FOR
 C          STARTS IN TWO OR MORE DIMENSIONS
 C
-            IF(NS.GT.1)THEN
+            IF(NDIM.GT.1)THEN
                IFIXX=1
                NRCALL=1
                ZVEC(1,1)=1.0
-               DO 4445 K=2,NS
+               DO 4445 K=2,NDIM
                ZVEC(1,K)=0.0
  4445          CONTINUE
-               CALL CUTPLANE(NEQ,NPC,NRCALL,NS,XMAT,ZVEC,WS,
+               CALL CUTPLANE(NEQ,NPC,NRCALL,NDIM,XMAT,ZVEC,WS,
      C                MCUTS,LERROR,IFIXX,KTT,KT,LDATA)
 C
 C  GET MIDPOINT AND SPREADS FROM CUTPLANE IF FIRST GLOBAL ITERATION
 C
                IF(IHAPPY.EQ.1)THEN
                   IF(ZVEC(1,1).LT.0.0)THEN
-                     DO 4447 K=1,NS
+                     DO 4447 K=1,NDIM
                      ZVEC(1,K)=-ZVEC(1,K)
  4447                CONTINUE
                      WS(1)=-WS(1)
@@ -468,7 +468,7 @@ C
                      MCUTS(1,2)=KCUTTT
                   ENDIF
                   SUM=0.0
-                  DO 4446 K=1,NS
+                  DO 4446 K=1,NDIM
                   OLDZ(K)=WS(1)*ZVEC(1,K)
                   SUM=SUM+OLDZ(K)**2
                   IF(MCUTS(1,1).EQ.1)THEN
@@ -479,7 +479,7 @@ C
                   ENDIF
  4446             CONTINUE
                   IF(SUM.GT.1.0)THEN
-                     DO 4448 K=1,NS
+                     DO 4448 K=1,NDIM
                      OLDZ(K)=OLDZ(K)/SQRT(SUM)
  4448                CONTINUE
                   ENDIF
@@ -494,7 +494,7 @@ C
             CALL RCINT2(IICONG,NEQ,NPC,NQC,KRC,KTOTP,KTOTQ,
      C           XPLOG,OLDZ,OLDD)
             GMPAF=EXP(XPLOG/FLOAT(KRC))
-            DO 22 K=1,NS
+            DO 22 K=1,NDIM
             ZMID(NEQ+KTOTQ,K)=OLDZ(K)
             DYN(NEQ+KTOTQ,K)=OLDD(K)
   22        CONTINUE
@@ -506,7 +506,7 @@ C
       KTOTQ=KTOTQ+NQC
   2   CONTINUE
       DO 41 I=1,NQTOT
-      DO 444 J=1,NS
+      DO 444 J=1,NDIM
          DYNOUT(I,J) = DYN(I,J)
          ZMIDOUT(I,J) = ZMID(I,J)
  444  CONTINUE
@@ -601,7 +601,7 @@ C
       GMPB=EXP(XBIGLOG(I,2)/FLOAT(KBIGLOG(I,2)))
       SUMLOG1=SUMLOG1+XBIGLOG(I,1)
       SUMLOG2=SUMLOG2+XBIGLOG(I,2)
-      IF(NS.EQ.1)THEN
+      IF(NDIM.EQ.1)THEN
          DO 445 J=1,2
             XBIGLOGOUT(I, J) = XBIGLOG(I, J)
  445     CONTINUE
@@ -612,8 +612,8 @@ C
          GMPAOUT(I) = GMPA
          GMPBOUT(I) = GMPB
       ENDIF
-      IF(NS.EQ.2)THEN
-         TT=XDATA(I,NS+1)
+      IF(NDIM.EQ.2)THEN
+         TT=XDATA(I,NDIM+1)
          VARX1=XVAR(ID1(I),1)+TT*TT*XVAR(ID1(I),2)+
      C           2.0*TT*XVAR(ID1(I),3)
          VARX2=XVAR(ID1(I),4)+TT*TT*XVAR(ID1(I),5)+
@@ -663,7 +663,7 @@ C
      C               WEIGHT(99),NUMCONGT(200),
      C               ILEGCONG(54001),KWHERE(99999,111),
      C               XBIGLOG(54001,2),KBIGLOG(54001,4)
-      COMMON /MINE/ NS,NQTOT,NPTOT
+      COMMON /MINE/ NDIM,NQTOT,NPTOT
 C
       NINC=15
       XINC=.1
@@ -677,28 +677,28 @@ C
 C
 C    CURRENT UP XINC
 C
-      WEIGHT(NS+1)=WEIGHT(NS+1)+XINC
+      WEIGHT(NDIM+1)=WEIGHT(NDIM+1)+XINC
 C
       CALL PLOG(XPLOG,NFIRST,NLAST)
       SAVEUP=XPLOG
-      WEIGHT(NS+1)=WEIGHT(NS+1)-XINC
+      WEIGHT(NDIM+1)=WEIGHT(NDIM+1)-XINC
 C
 C    CURRENT DOWN XINC
 C
-      WEIGHT(NS+1)=WEIGHT(NS+1)-XINC
+      WEIGHT(NDIM+1)=WEIGHT(NDIM+1)-XINC
 C
       CALL PLOG(XPLOG,NFIRST,NLAST)
       SAVEDWN=XPLOG
-      WEIGHT(NS+1)=WEIGHT(NS+1)+XINC
+      WEIGHT(NDIM+1)=WEIGHT(NDIM+1)+XINC
 C
 C  DETERMINE DIRECTION TO MOVE
 C
       IF(SAVEUP.GT.SAVECURR)THEN
-         WEIGHT(NS+1)=WEIGHT(NS+1)+XINC
+         WEIGHT(NDIM+1)=WEIGHT(NDIM+1)+XINC
          CALL PLOG(XPLOG,NFIRST,NLAST)
          SAVECURR=XPLOG
          DO 1 I=1,NINC
-         WEIGHT(NS+1)=WEIGHT(NS+1)+XINC
+         WEIGHT(NDIM+1)=WEIGHT(NDIM+1)+XINC
          CALL PLOG(XPLOG,NFIRST,NLAST)
          SAVEUP=XPLOG
 C
@@ -706,7 +706,7 @@ C  STEP FORWARD UNTIL LOG-LIKELIHOOD GOES UP -- IF IT GOES UP
 C    RESTORE PREVIOUS VALUE AND HALVE THE STEP
 C
          IF(SAVEUP.LT.SAVECURR)THEN
-            WEIGHT(NS+1)=WEIGHT(NS+1)-XINC
+            WEIGHT(NDIM+1)=WEIGHT(NDIM+1)-XINC
             XINC=XINC/2.0
          ENDIF
          IF(SAVEUP.GT.SAVECURR)THEN
@@ -717,11 +717,11 @@ c$$$         WRITE(*,1111)SAVECURR,SAVEUP
   1      CONTINUE
       ENDIF
       IF(SAVEDWN.GT.SAVECURR)THEN
-         WEIGHT(NS+1)=WEIGHT(NS+1)-XINC
+         WEIGHT(NDIM+1)=WEIGHT(NDIM+1)-XINC
          CALL PLOG(XPLOG,NFIRST,NLAST)
          SAVECURR=XPLOG
          DO 2 I=1,NINC
-         WEIGHT(NS+1)=WEIGHT(NS+1)-XINC
+         WEIGHT(NDIM+1)=WEIGHT(NDIM+1)-XINC
          CALL PLOG(XPLOG,NFIRST,NLAST)
          SAVEDWN=XPLOG
 C
@@ -729,7 +729,7 @@ C  STEP BACKWARD UNTIL LOG-LIKELIHOOD GOES UP -- IF IT GOES UP
 C    RESTORE PREVIOUS VALUE AND HALVE THE STEP
 C
          IF(SAVEDWN.LT.SAVECURR)THEN
-            WEIGHT(NS+1)=WEIGHT(NS+1)+XINC
+            WEIGHT(NDIM+1)=WEIGHT(NDIM+1)+XINC
             XINC=XINC/2.0
          ENDIF
          IF(SAVEDWN.GT.SAVECURR)THEN
@@ -757,7 +757,7 @@ C
      C               WEIGHT(99),NUMCONGT(200),
      C               ILEGCONG(54001),KWHERE(99999,111),
      C               XBIGLOG(54001,2),KBIGLOG(54001,4)
-      COMMON /MINE/ NS,NQTOT,NPTOT
+      COMMON /MINE/ NDIM,NQTOT,NPTOT
 C
       NINC=15
       XINC=.01
@@ -1037,7 +1037,7 @@ C
      C               WEIGHT(99),NUMCONGT(200),
      C               ILEGCONG(54001),KWHERE(99999,111),
      C               XBIGLOG(54001,2),KBIGLOG(54001,4)
-      COMMON /MINE/ NS,NQTOT,NPTOT
+      COMMON /MINE/ NDIM,NQTOT,NPTOT
       COMMON /dists/ WDERV(99),ZDF(150000,4),NDEVIT,XDEVIT
  1001 FORMAT(I4,F5.2,F10.7)
  1002 FORMAT(' LOG-L',2I10,10F8.5)
@@ -1051,7 +1051,7 @@ C
       XPLOG=0.0
       XXPLOG=0.0
 C
-      DO 7 K=1,2*NS+2
+      DO 7 K=1,2*NDIM+2
       WDERV(K)=0.0
       WDERV2(K)=0.0
   7   CONTINUE
@@ -1073,12 +1073,12 @@ C
       YPLOG=0.0
       KPLOG=0
       KPWRONG=0
-      DO 8 K=1,2*(NS+1)
+      DO 8 K=1,2*(NDIM+1)
       WDERV(K)=0.0
   8   CONTINUE
       DO 33 J=1,NQC
       IF(RCBAD(J+KTOTQ).EQV..TRUE.)THEN
-         DO 3 K=1,NS
+         DO 3 K=1,NDIM
          DYES(K)=0.0
          DNO(K)=0.0
          DYES(K)=(XDATA(I+KTOTP,K)-ZMID(J+KTOTQ,K)+DYN(J+KTOTQ,K))**2
@@ -1095,7 +1095,7 @@ C
             IF(RCVOTE1(I+KTOTP,J).EQV..TRUE.)THEN
                DC=0.0
                DB=0.0
-               DO 4 K=1,NS
+               DO 4 K=1,NDIM
                DC=DC+(-WEIGHT(K)*WEIGHT(K)*DYES(K))
                DB=DB+(-WEIGHT(K)*WEIGHT(K)*DNO(K))
                DCC(K)=DYES(K)
@@ -1109,7 +1109,7 @@ C
             IF(RCVOTE1(I+KTOTP,J).EQV..FALSE.)THEN
                DC=0.0
                DB=0.0
-               DO 5 K=1,NS
+               DO 5 K=1,NDIM
                DC=DC+(-WEIGHT(K)*WEIGHT(K)*DNO(K))
                DB=DB+(-WEIGHT(K)*WEIGHT(K)*DYES(K))
                DCC(K)=DNO(K)
@@ -1118,7 +1118,7 @@ C
                XCC=-1.0
             ENDIF
 C
-            ZS=WEIGHT(NS+1)*(EXP(DC)-EXP(DB))
+            ZS=WEIGHT(NDIM+1)*(EXP(DC)-EXP(DB))
             WWIMJ=ZS*XDEVIT
             KWIMJ=IFIX(ABS(WWIMJ)+.5)
             IF(KWIMJ.GT.NDEVIT-2)KWIMJ=NDEVIT-2
@@ -1135,18 +1135,18 @@ C
             YPLOG=YPLOG+CDFLOG
             KPLOG=KPLOG+1
             ZGAUSS=EXP(-(ZS*ZS)/2.0)
-            DO 6 K=1,NS
-            AZULU=-2.0*WEIGHT(K)*WEIGHT(NS+1)*
+            DO 6 K=1,NDIM
+            AZULU=-2.0*WEIGHT(K)*WEIGHT(NDIM+1)*
      C       (((1.0/SQRT(2.0*3.1415926536))*EXP(-(ZS*ZS)/2.0))/ZDISTF)*
      C               (DCC(K)*EXP(DC)-DBB(K)*EXP(DB))
             WDERV(K)=WDERV(K)+AZULU
-            WDERV(NS+1+K)=WDERV(NS+1+K)+AZULU**2
+            WDERV(NDIM+1+K)=WDERV(NDIM+1+K)+AZULU**2
   6         CONTINUE
             AZULU=
      C       (((1.0/SQRT(2.0*3.1415926536))*EXP(-(ZS*ZS)/2.0))/ZDISTF)*
      C            (EXP(DC) - EXP(DB))
-            WDERV(NS+1)=WDERV(NS+1)+AZULU
-            WDERV(NS+1+NS+1)=WDERV(NS+1+NS+1)+AZULU**2
+            WDERV(NDIM+1)=WDERV(NDIM+1)+AZULU
+            WDERV(NDIM+1+NDIM+1)=WDERV(NDIM+1+NDIM+1)+AZULU**2
          ENDIF
       ENDIF
   33  CONTINUE
@@ -1154,7 +1154,7 @@ C
       KBIGLOG(I+KTOTP,2)=KPLOG
       KBIGLOG(I+KTOTP,4)=KPWRONG
       XXPLOG=XXPLOG+YPLOG
-      DO 9 K=1,NS+1+NS+1
+      DO 9 K=1,NDIM+1+NDIM+1
       WDERV2(K)=WDERV2(K)+WDERV(K)
   9   CONTINUE
   2   CONTINUE
@@ -1164,8 +1164,8 @@ C
 C
 C      WRITE(* ,1006)KTOT,XPLOG,XXPLOG
       GMP=EXP(XXPLOG/FLOAT(KTOT))
-C      WRITE(*,1006)KTOT,XXPLOG,(WDERV2(JJ),JJ=1,NS+1)
-C      WRITE(*,1006)KTOT,XXPLOG,(WDERV2(JJ),JJ=NS+2,2*(NS+1))
+C      WRITE(*,1006)KTOT,XXPLOG,(WDERV2(JJ),JJ=1,NDIM+1)
+C      WRITE(*,1006)KTOT,XXPLOG,(WDERV2(JJ),JJ=NDIM+2,2*(NDIM+1))
       XPLOG=XXPLOG
       RETURN
       END
@@ -1195,7 +1195,7 @@ C
      C               WEIGHT(99),NUMCONGT(200),
      C               ILEGCONG(54001),KWHERE(99999,111),
      C               XBIGLOG(54001,2),KBIGLOG(54001,4)
-      COMMON /MINE/ NS,NQTOT,NPTOT
+      COMMON /MINE/ NDIM,NQTOT,NPTOT
       COMMON /dists/ WDERV(99),ZDF(150000,4),NDEVIT,XDEVIT
   100 FORMAT(8F7.3)
   200 FORMAT(I6,2I5,2F13.5)
@@ -1203,8 +1203,8 @@ C
  1002 FORMAT(' LEG ',I6,2I6,5F7.3,2F13.5)
 C
       XPLOG=0.0
-      DO 40 K=1,4*NS
-      DO 40 J=1,4*NS
+      DO 40 K=1,4*NDIM
+      DO 40 J=1,4*NDIM
       OUTX0(J,K)=0.0
       OUTX1(J,K)=0.0
       OUTX2(J,K)=0.0
@@ -1230,11 +1230,11 @@ C
 C  STORE TIME TREND TERMS TO CALCULATE STANDARD ERRORS IN MAIN
 C   PROGRAM
 C
-         XDATA(MWHERE,NS+1)=0.0
-         XDATA(MWHERE,NS+2)=0.0
-         XDATA(MWHERE,NS+3)=0.0
+         XDATA(MWHERE,NDIM+1)=0.0
+         XDATA(MWHERE,NDIM+2)=0.0
+         XDATA(MWHERE,NDIM+3)=0.0
 C
-         DO 52 K=1,NS
+         DO 52 K=1,NDIM
 C
 C  CONSTANT MODEL
 C
@@ -1247,7 +1247,7 @@ C
          IF(NMODEL.EQ.1)THEN
             XDATA(MWHERE,K)=ATIME(KK,1)*XBETA(1,K)+
      C                        ATIME(KK,2)*XBETA(2,K)
-            XDATA(MWHERE,NS+1)=ATIME(KK,2)
+            XDATA(MWHERE,NDIM+1)=ATIME(KK,2)
          ENDIF
 C
 C  QUADRATIC MODEL
@@ -1256,8 +1256,8 @@ C
             XDATA(MWHERE,K)=ATIME(KK,1)*XBETA(1,K)+
      C                        ATIME(KK,2)*XBETA(2,K)+
      C                        ATIME(KK,3)*XBETA(3,K)
-            XDATA(MWHERE,NS+1)=ATIME(KK,2)
-            XDATA(MWHERE,NS+2)=ATIME(KK,3)
+            XDATA(MWHERE,NDIM+1)=ATIME(KK,2)
+            XDATA(MWHERE,NDIM+2)=ATIME(KK,3)
          ENDIF
 C
 C  CUBIC MODEL
@@ -1267,9 +1267,9 @@ C
      C                        ATIME(KK,2)*XBETA(2,K)+
      C                        ATIME(KK,3)*XBETA(3,K)+
      C                        ATIME(KK,4)*XBETA(4,K)
-            XDATA(MWHERE,NS+1)=ATIME(KK,2)
-            XDATA(MWHERE,NS+2)=ATIME(KK,3)
-            XDATA(MWHERE,NS+3)=ATIME(KK,4)
+            XDATA(MWHERE,NDIM+1)=ATIME(KK,2)
+            XDATA(MWHERE,NDIM+2)=ATIME(KK,3)
+            XDATA(MWHERE,NDIM+3)=ATIME(KK,4)
          ENDIF
 C
          XMARK(KK,K)=XDATA(MWHERE,K)
@@ -1277,7 +1277,7 @@ C
       ENDIF
       KTOTQ=KTOTQ+NQ
   51  CONTINUE
-      DO 8 K=1,NS
+      DO 8 K=1,NDIM
       XDERV(K)=0.0
       XDERV1(K)=0.0
       XDERV2(K)=0.0
@@ -1306,7 +1306,7 @@ C  IF AT LEAST 2.5% IN MINORITY
 C
       IF(RCBAD(J+KTOTQ).EQV..TRUE.)THEN
 C
-      DO 3 K=1,NS
+      DO 3 K=1,NDIM
       DYES(K)=0.0
       DNO(K)=0.0
       DYES1(K)=0.0
@@ -1327,7 +1327,7 @@ C
          IF(RCVOTE1(MWHERE,J).EQV..TRUE.)THEN
             DC=0.0
             DB=0.0
-            DO 4 K=1,NS
+            DO 4 K=1,NDIM
             DC=DC+(-WEIGHT(K)*WEIGHT(K)*DYES(K))
             DB=DB+(-WEIGHT(K)*WEIGHT(K)*DNO(K))
             DCC(K)=DYES(K)
@@ -1342,7 +1342,7 @@ C
          IF(RCVOTE1(MWHERE,J).EQV..FALSE.)THEN
             DC=0.0
             DB=0.0
-            DO 5 K=1,NS
+            DO 5 K=1,NDIM
             DC=DC+(-WEIGHT(K)*WEIGHT(K)*DNO(K))
             DB=DB+(-WEIGHT(K)*WEIGHT(K)*DYES(K))
             DCC(K)=DNO(K)
@@ -1352,7 +1352,7 @@ C
   5         CONTINUE
          ENDIF
 C
-         ZS=WEIGHT(NS+1)*(EXP(DC)-EXP(DB))
+         ZS=WEIGHT(NDIM+1)*(EXP(DC)-EXP(DB))
 C
          WWIMJ=ZS*XDEVIT
          KWIMJ=IFIX(ABS(WWIMJ)+.5)
@@ -1373,52 +1373,52 @@ C
 C
 C  OUTER PRODUCT MATRIX
 C
-         DO 31 K=1,NS
+         DO 31 K=1,NDIM
          AADERV(K)=(ZGAUSS/ZDISTF)*
      C            (DCC1(K)*EXP(DC)-DBB1(K)*EXP(DB))
          IF(NMODEL.EQ.1)THEN
-            AADERV(K+NS)=ATIME(JJ,2)*(ZGAUSS/ZDISTF)*
+            AADERV(K+NDIM)=ATIME(JJ,2)*(ZGAUSS/ZDISTF)*
      C            (DCC1(K)*EXP(DC)-DBB1(K)*EXP(DB))
          ENDIF
          IF(NMODEL.EQ.2)THEN
-            AADERV(K+NS)=ATIME(JJ,2)*(ZGAUSS/ZDISTF)*
+            AADERV(K+NDIM)=ATIME(JJ,2)*(ZGAUSS/ZDISTF)*
      C            (DCC1(K)*EXP(DC)-DBB1(K)*EXP(DB))
-            AADERV(K+2*NS)=ATIME(JJ,3)*(ZGAUSS/ZDISTF)*
+            AADERV(K+2*NDIM)=ATIME(JJ,3)*(ZGAUSS/ZDISTF)*
      C            (DCC1(K)*EXP(DC)-DBB1(K)*EXP(DB))
          ENDIF
          IF(NMODEL.EQ.3)THEN
-            AADERV(K+NS)=ATIME(JJ,2)*(ZGAUSS/ZDISTF)*
+            AADERV(K+NDIM)=ATIME(JJ,2)*(ZGAUSS/ZDISTF)*
      C            (DCC1(K)*EXP(DC)-DBB1(K)*EXP(DB))
-            AADERV(K+2*NS)=ATIME(JJ,3)*(ZGAUSS/ZDISTF)*
+            AADERV(K+2*NDIM)=ATIME(JJ,3)*(ZGAUSS/ZDISTF)*
      C            (DCC1(K)*EXP(DC)-DBB1(K)*EXP(DB))
-            AADERV(K+3*NS)=ATIME(JJ,4)*(ZGAUSS/ZDISTF)*
+            AADERV(K+3*NDIM)=ATIME(JJ,4)*(ZGAUSS/ZDISTF)*
      C            (DCC1(K)*EXP(DC)-DBB1(K)*EXP(DB))
          ENDIF
   31     CONTINUE
-         DO 32 JJK=1,NS
-         DO 32 JJJ=1,NS
+         DO 32 JJK=1,NDIM
+         DO 32 JJJ=1,NDIM
          OUTX0(JJJ,JJK)=OUTX0(JJJ,JJK)+AADERV(JJK)*AADERV(JJJ)
   32     CONTINUE
          IF(NMODEL.EQ.1)THEN
-            DO 33 JJK=1,2*NS
-            DO 33 JJJ=1,2*NS
+            DO 33 JJK=1,2*NDIM
+            DO 33 JJJ=1,2*NDIM
             OUTX1(JJJ,JJK)=OUTX1(JJJ,JJK)+AADERV(JJK)*AADERV(JJJ)
   33        CONTINUE
          ENDIF
          IF(NMODEL.EQ.2)THEN
-            DO 34 JJK=1,3*NS
-            DO 34 JJJ=1,3*NS
+            DO 34 JJK=1,3*NDIM
+            DO 34 JJJ=1,3*NDIM
             OUTX2(JJJ,JJK)=OUTX2(JJJ,JJK)+AADERV(JJK)*AADERV(JJJ)
   34        CONTINUE
          ENDIF
          IF(NMODEL.EQ.3)THEN
-            DO 35 JJK=1,4*NS
-            DO 35 JJJ=1,4*NS
+            DO 35 JJK=1,4*NDIM
+            DO 35 JJJ=1,4*NDIM
             OUTX3(JJJ,JJK)=OUTX3(JJJ,JJK)+AADERV(JJK)*AADERV(JJJ)
   35        CONTINUE
          ENDIF
 C
-         DO 6 K=1,NS
+         DO 6 K=1,NDIM
          XDERV(K)=XDERV(K)+(ZGAUSS/ZDISTF)*
      C            (DCC1(K)*EXP(DC)-DBB1(K)*EXP(DB))
          XDERV1(K)=XDERV1(K)+ATIME(JJ,2)*(ZGAUSS/ZDISTF)*
@@ -1465,7 +1465,7 @@ C
      C               WEIGHT(99),NUMCONGT(200),
      C               ILEGCONG(54001),KWHERE(99999,111),
      C               XBIGLOG(54001,2),KBIGLOG(54001,4)
-      COMMON /MINE/ NS,NQTOT,NPTOT
+      COMMON /MINE/ NDIM,NQTOT,NPTOT
   101 FORMAT(' PERFORMANCE INDEX EIGENVALUE/VECTOR ROUTINE=',3I6)
   102 FORMAT(2I6,30F10.4)
   103 FORMAT(12X,30F10.4)
@@ -1499,7 +1499,7 @@ C
       XINC=0.0
       IF(KK.GT.1)XINC=2.0/(FLOAT(KK)-1.0)
       SUM=0.0
-      DO 52 K=1,NS
+      DO 52 K=1,NDIM
       XBETA(1,K)=0.0
       XBETA(2,K)=0.0
       XBETA(3,K)=0.0
@@ -1565,7 +1565,7 @@ C  DO CHECK ON STARTING VALUE OF LEGISLATOR COORDINATE -- IF OUTSIDE
 C   HYPERSPHERE PULL IT BACK INSIDE
 C
       IF(SUM.GT.1.0)THEN
-         DO 55 K=1,NS
+         DO 55 K=1,NDIM
          XBETA(1,K)=.75*(XBETA(1,K)/SQRT(SUM))
   55     CONTINUE
       ENDIF
@@ -1585,12 +1585,12 @@ C ***********
 C
       DO 99 IIII=1,10
 C
-      DO 2 K=1,NS
+      DO 2 K=1,NDIM
       XBETASV(1,K)=XBETA(1,K)
       XXX(K)=0.0
   2   CONTINUE
 C
-      DO 40 K=1,NS
+      DO 40 K=1,NDIM
       XDERV(K)=0.0
       XDERV1(K)=0.0
       XDERV2(K)=0.0
@@ -1613,7 +1613,7 @@ C
 C
       GMP=EXP(XPLOG/FLOAT(KRC))
       SUMA=0.0
-      DO 61 K=1,NS
+      DO 61 K=1,NDIM
       XXX(K)=XDERV(K)/FLOAT(KRC)
       SUMA=SUMA+XXX(K)**2
   61  CONTINUE
@@ -1631,7 +1631,7 @@ C
 C
       DO 212 KK=1,NINC
       SUM=0.0
-      DO 24 K=1,NS
+      DO 24 K=1,NDIM
 C
 C  *****
 C   CHECK FOR SIGN OF DERIVATIVE FOR GRADIENT!!!!!!!!
@@ -1650,10 +1650,10 @@ C  RESET LEGISLATOR POINT TO SURFACE OF UNIT HYPERSPHERE AND
 C    CALCULATE DERIVATIVES AND LOG-LIKELIHOODS.  THEN EXIT
 C    SEARCH LOOP
 C
-         DO 241 K=1,NS
+         DO 241 K=1,NDIM
          XBETA(1,K)=XBETA(1,K)/SQRT(SUM)
   241    CONTINUE
-         DO 243 K=1,NS
+         DO 243 K=1,NDIM
          XDERV(K)=0.0
          XDERV1(K)=0.0
          XDERV2(K)=0.0
@@ -1669,14 +1669,14 @@ C
 C
          YGMP(KK)=GMP
          LLL(KK)=KK
-         DO 242 K=1,NS
+         DO 242 K=1,NDIM
          YGAMMA(KK,K)=XBETA(1,K)
          XXXSAVE(KK,K)=XXX(K)
   242    CONTINUE
          YLOG(KK)=XPLOG
          GO TO 2112
       ENDIF
-      DO 240 K=1,NS
+      DO 240 K=1,NDIM
       XDERV(K)=0.0
       XDERV1(K)=0.0
       XDERV2(K)=0.0
@@ -1695,7 +1695,7 @@ C
 C
       YGMP(KK)=GMP
       LLL(KK)=KK
-      DO 222 K=1,NS
+      DO 222 K=1,NDIM
       YGAMMA(KK,K)=XBETA(1,K)
       XXXSAVE(KK,K)=XXX(K)
   222 CONTINUE
@@ -1711,7 +1711,7 @@ C
 C  FIND MAXIMUM ON BEST DIRECTION THROUGH THE SPACE
 C
       CALL RSORT(YGMP,NNINC,LLL)
-      DO 224 K=1,NS
+      DO 224 K=1,NDIM
       XBETA(1,K)=YGAMMA(LLL(NNINC),K)
       XBETASV(1,K)=XBETA(1,K)
   224 CONTINUE
@@ -1737,7 +1737,7 @@ C
      C        NFIRST,NLAST,NMODEL)
 C
       GMPNOW=EXP(XPLOG/FLOAT(KRC))
-      DO 666 K=1,NS
+      DO 666 K=1,NDIM
       SUM=0.0
       DO 665 JJJ=1,NEPCONG
       SUM=SUM+XMARK(JJJ,K)
@@ -1770,18 +1770,18 @@ C  INITIALIZE LINEAR BETAS TO ZERO SO STARTING LOG-LIKELIHOOD
 C    IS EQUAL TO THE THE ENDING LOG-LIKELIHOOD OF CONSTANT
 C    MODEL
 C
-         DO 41 K=1,NS
+         DO 41 K=1,NDIM
          XBETA(2,K)=0.0
   41     CONTINUE
 C
          DO 999 IIII=1,10
 C   
-         DO 30 K=1,NS
+         DO 30 K=1,NDIM
          XBETASV(2,K)=XBETA(2,K)
          XXX(K)=0.0
   30     CONTINUE
 C
-         DO 31 K=1,NS
+         DO 31 K=1,NDIM
          XDERV(K)=0.0
          XDERV1(K)=0.0
          XDERV2(K)=0.0
@@ -1803,7 +1803,7 @@ C
 C
          GMP=EXP(XPLOG/FLOAT(KRC))
          ASUMA=0.0
-         DO 32 K=1,NS
+         DO 32 K=1,NDIM
          XXX(K)=XDERV1(K)/FLOAT(KRC)
          ASUMA=ASUMA+XXX(K)**2
   32     CONTINUE
@@ -1820,7 +1820,7 @@ C
 C 
          DO 312 KK=1,NINC
          SUM=0.0
-         DO 34 K=1,NS
+         DO 34 K=1,NDIM
 C
 C  *****
 C   CHECK FOR SIGN OF DERIVATIVE FOR GRADIENT!!!!!!!!
@@ -1830,7 +1830,7 @@ C
 C
   34     CONTINUE
 C
-         DO 35 K=1,NS
+         DO 35 K=1,NDIM
          XDERV(K)=0.0
          XDERV1(K)=0.0
          XDERV2(K)=0.0
@@ -1848,7 +1848,7 @@ C
 C
          YGMP(KK)=GMP
          LLL(KK)=KK
-         DO 36 K=1,NS
+         DO 36 K=1,NDIM
          YGAMMA(KK,K)=XBETA(2,K)
          XXXSAVE(KK,K)=XXX(K)
   36     CONTINUE
@@ -1861,7 +1861,7 @@ C
 C  FIND MAXIMUM ON BEST DIRECTION THROUGH THE SPACE
 C
          CALL RSORT(YGMP,NNINC,LLL)
-         DO 37 K=1,NS
+         DO 37 K=1,NDIM
          XBETA(2,K)=YGAMMA(LLL(NNINC),K)
          XBETASV(2,K)=XBETA(2,K)
   37     CONTINUE
@@ -1886,7 +1886,7 @@ C
      C           NFIRST,NLAST,NMODEL)
 C
          GMPNOW=EXP(XPLOG/FLOAT(KRC))
-         DO 766 K=1,NS
+         DO 766 K=1,NDIM
          SUM=0.0
          DO 664 JJJ=1,NEPCONG
          SUM=SUM+XMARK(JJJ,K)
@@ -1919,18 +1919,18 @@ C  INITIALIZE QUADRATIC BETAS TO ZERO SO STARTING LOG-LIKELIHOOD
 C    IS EQUAL TO THE THE ENDING LOG-LIKELIHOOD OF LINEAR
 C    MODEL
 C
-         DO 71 K=1,NS
+         DO 71 K=1,NDIM
          XBETA(3,K)=0.0
   71     CONTINUE
 C
          DO 998 IIII=1,10
 C   
-         DO 72 K=1,NS
+         DO 72 K=1,NDIM
          XBETASV(3,K)=XBETA(3,K)
          XXX(K)=0.0
   72     CONTINUE
 C
-         DO 73 K=1,NS
+         DO 73 K=1,NDIM
          XDERV(K)=0.0
          XDERV1(K)=0.0
          XDERV2(K)=0.0
@@ -1952,7 +1952,7 @@ C
 C
          GMP=EXP(XPLOG/FLOAT(KRC))
          ASUMA=0.0
-         DO 74 K=1,NS
+         DO 74 K=1,NDIM
          XXX(K)=XDERV2(K)/FLOAT(KRC)
          ASUMA=ASUMA+XXX(K)**2
   74     CONTINUE
@@ -1969,7 +1969,7 @@ C
 C 
          DO 712 KK=1,NINC
          SUM=0.0
-         DO 75 K=1,NS
+         DO 75 K=1,NDIM
 C
 C  *****
 C   CHECK FOR SIGN OF DERIVATIVE FOR GRADIENT!!!!!!!!
@@ -1979,7 +1979,7 @@ C
 C
   75     CONTINUE
 C
-         DO 76 K=1,NS
+         DO 76 K=1,NDIM
          XDERV(K)=0.0
          XDERV1(K)=0.0
          XDERV2(K)=0.0
@@ -1997,7 +1997,7 @@ C
 C
          YGMP(KK)=GMP
          LLL(KK)=KK
-         DO 77 K=1,NS
+         DO 77 K=1,NDIM
          YGAMMA(KK,K)=XBETA(3,K)
          XXXSAVE(KK,K)=XXX(K)
   77     CONTINUE
@@ -2010,7 +2010,7 @@ C
 C  FIND MAXIMUM ON BEST DIRECTION THROUGH THE SPACE
 C
          CALL RSORT(YGMP,NNINC,LLL)
-         DO 78 K=1,NS
+         DO 78 K=1,NDIM
          XBETA(3,K)=YGAMMA(LLL(NNINC),K)
          XBETASV(3,K)=XBETA(3,K)
   78     CONTINUE
@@ -2035,7 +2035,7 @@ C
      C           NFIRST,NLAST,NMODEL)
 C
          GMPNOW=EXP(XPLOG/FLOAT(KRC))
-         DO 79 K=1,NS
+         DO 79 K=1,NDIM
          SUM=0.0
          DO 764 JJJ=1,NEPCONG
          SUM=SUM+XMARK(JJJ,K)
@@ -2067,18 +2067,18 @@ C  INITIALIZE CUBIC BETAS TO ZERO SO STARTING LOG-LIKELIHOOD
 C    IS EQUAL TO THE THE ENDING LOG-LIKELIHOOD OF QUADRATIC
 C    MODEL
 C
-         DO 81 K=1,NS
+         DO 81 K=1,NDIM
          XBETA(4,K)=0.0
   81     CONTINUE
 C
          DO 997 IIII=1,10
 C   
-         DO 82 K=1,NS
+         DO 82 K=1,NDIM
          XBETASV(4,K)=XBETA(4,K)
          XXX(K)=0.0
   82     CONTINUE
 C
-         DO 83 K=1,NS
+         DO 83 K=1,NDIM
          XDERV(K)=0.0
          XDERV1(K)=0.0
          XDERV2(K)=0.0
@@ -2100,7 +2100,7 @@ C
 C
          GMP=EXP(XPLOG/FLOAT(KRC))
          ASUMA=0.0
-         DO 84 K=1,NS
+         DO 84 K=1,NDIM
          XXX(K)=XDERV3(K)/FLOAT(KRC)
          ASUMA=ASUMA+XXX(K)**2
   84     CONTINUE
@@ -2117,7 +2117,7 @@ C
 C 
          DO 812 KK=1,NINC
          SUM=0.0
-         DO 85 K=1,NS
+         DO 85 K=1,NDIM
 C
 C  *****
 C   CHECK FOR SIGN OF DERIVATIVE FOR GRADIENT!!!!!!!!
@@ -2127,7 +2127,7 @@ C
 C
   85     CONTINUE
 C
-         DO 86 K=1,NS
+         DO 86 K=1,NDIM
          XDERV(K)=0.0
          XDERV1(K)=0.0
          XDERV2(K)=0.0
@@ -2145,7 +2145,7 @@ C
 C
          YGMP(KK)=GMP
          LLL(KK)=KK
-         DO 87 K=1,NS
+         DO 87 K=1,NDIM
          YGAMMA(KK,K)=XBETA(4,K)
          XXXSAVE(KK,K)=XXX(K)
   87     CONTINUE
@@ -2158,7 +2158,7 @@ C
 C  FIND MAXIMUM ON BEST DIRECTION THROUGH THE SPACE
 C
          CALL RSORT(YGMP,NNINC,LLL)
-         DO 88 K=1,NS
+         DO 88 K=1,NDIM
          XBETA(4,K)=YGAMMA(LLL(NNINC),K)
          XBETASV(4,K)=XBETA(4,K)
   88     CONTINUE
@@ -2183,7 +2183,7 @@ C
      C           NFIRST,NLAST,NMODEL)
 C
          GMPNOW=EXP(XPLOG/FLOAT(KRC))
-         DO 89 K=1,NS
+         DO 89 K=1,NDIM
          SUM=0.0
          DO 864 JJJ=1,NEPCONG
          SUM=SUM+XMARK(JJJ,K)
@@ -2208,20 +2208,20 @@ C  INVERT OUTER PRODUCT MATRIX TO GET STANDARD ERRORS
 C
 C    ***CONSTANT MODEL***
 C
-      call rs(99,NS,OUTX0,wvec,1,ZMAT,fv1,fv2,ier)
+      call rs(99,NDIM,OUTX0,wvec,1,ZMAT,fv1,fv2,ier)
 C
 C  (X'X)-1
 C
-      DO 60 I=1,NS
+      DO 60 I=1,NDIM
       DERVISH(1,I)=XDERV(I)/FLOAT(KRC)
       DERVISH(2,I)=XDERV1(I)/FLOAT(KRC)
       DERVISH(3,I)=XDERV2(I)/FLOAT(KRC)
       DERVISH(4,I)=XDERV3(I)/FLOAT(KRC)
-      DO 60 K=1,NS
+      DO 60 K=1,NDIM
       SUM=0.0
-      DO 62 J=1,NS
-      IF(ABS(WVEC(NS+1-J)).GT..0001)THEN
-          SUM=SUM+ZMAT(K,NS+1-J)*(1.0/WVEC(NS+1-J))*ZMAT(I,NS+1-J)
+      DO 62 J=1,NDIM
+      IF(ABS(WVEC(NDIM+1-J)).GT..0001)THEN
+          SUM=SUM+ZMAT(K,NDIM+1-J)*(1.0/WVEC(NDIM+1-J))*ZMAT(I,NDIM+1-J)
       ENDIF
   62  CONTINUE
   60  OUTX0(I,K)=SUM
@@ -2229,17 +2229,17 @@ C
 C  ***LINEAR MODEL
 C
       IF(NEPCONG.GE.5)THEN
-         call rs(99,2*NS,OUTX1,wvec,1,ZMAT,fv1,fv2,ier)
+         call rs(99,2*NDIM,OUTX1,wvec,1,ZMAT,fv1,fv2,ier)
 C
 C  (X'X)-1
 C
-         DO 63 I=1,2*NS
-         DO 63 K=1,2*NS
+         DO 63 I=1,2*NDIM
+         DO 63 K=1,2*NDIM
          SUM=0.0
-         DO 64 J=1,2*NS
-         IF(ABS(WVEC(2*NS+1-J)).GT..0001)THEN
-             SUM=SUM+ZMAT(K,2*NS+1-J)*
-     C           (1.0/WVEC(2*NS+1-J))*ZMAT(I,2*NS+1-J)
+         DO 64 J=1,2*NDIM
+         IF(ABS(WVEC(2*NDIM+1-J)).GT..0001)THEN
+             SUM=SUM+ZMAT(K,2*NDIM+1-J)*
+     C           (1.0/WVEC(2*NDIM+1-J))*ZMAT(I,2*NDIM+1-J)
          ENDIF
   64     CONTINUE
   63     OUTX1(I,K)=SUM
@@ -2248,17 +2248,17 @@ C
 C  ***QUADRATIC MODEL
 C
       IF(NEPCONG.GE.6)THEN
-         call rs(99,3*NS,OUTX2,wvec,1,ZMAT,fv1,fv2,ier)
+         call rs(99,3*NDIM,OUTX2,wvec,1,ZMAT,fv1,fv2,ier)
 C
 C  (X'X)-1
 C
-         DO 65 I=1,3*NS
-         DO 65 K=1,3*NS
+         DO 65 I=1,3*NDIM
+         DO 65 K=1,3*NDIM
          SUM=0.0
-         DO 66 J=1,3*NS
-         IF(ABS(WVEC(3*NS+1-J)).GT..0001)THEN
-             SUM=SUM+ZMAT(K,3*NS+1-J)*
-     C           (1.0/WVEC(3*NS+1-J))*ZMAT(I,3*NS+1-J)
+         DO 66 J=1,3*NDIM
+         IF(ABS(WVEC(3*NDIM+1-J)).GT..0001)THEN
+             SUM=SUM+ZMAT(K,3*NDIM+1-J)*
+     C           (1.0/WVEC(3*NDIM+1-J))*ZMAT(I,3*NDIM+1-J)
          ENDIF
   66     CONTINUE
   65     OUTX2(I,K)=SUM
@@ -2267,17 +2267,17 @@ C
 C  ***CUBIC MODEL
 C
       IF(NEPCONG.GE.7)THEN
-         call rs(99,4*NS,OUTX3,wvec,1,ZMAT,fv1,fv2,ier)
+         call rs(99,4*NDIM,OUTX3,wvec,1,ZMAT,fv1,fv2,ier)
 C
 C  (X'X)-1
 C
-         DO 67 I=1,4*NS
-         DO 67 K=1,4*NS
+         DO 67 I=1,4*NDIM
+         DO 67 K=1,4*NDIM
          SUM=0.0
-         DO 68 J=1,4*NS
-         IF(ABS(WVEC(4*NS+1-J)).GT..0001)THEN
-             SUM=SUM+ZMAT(K,4*NS+1-J)*
-     C           (1.0/WVEC(4*NS+1-J))*ZMAT(I,4*NS+1-J)
+         DO 68 J=1,4*NDIM
+         IF(ABS(WVEC(4*NDIM+1-J)).GT..0001)THEN
+             SUM=SUM+ZMAT(K,4*NDIM+1-J)*
+     C           (1.0/WVEC(4*NDIM+1-J))*ZMAT(I,4*NDIM+1-J)
          ENDIF
   68     CONTINUE
   67     OUTX3(I,K)=SUM
@@ -2294,7 +2294,7 @@ C
 C      TO GET THE ROW ENTRIES OF P.
 C  **************************************************************************
 C
-      SUBROUTINE REGA(NS,NF,A,Y,V)
+      SUBROUTINE REGA(NDIM,NF,A,Y,V)
       DIMENSION A(152,127),Y(152),B(127,127),C(127,127),V(152),
      CBB(127,152),ZMAT(127,127),FV1(127),FV2(127),WVEC(127)
       COMMON /AREA1/ JR,LR
@@ -2309,7 +2309,7 @@ C
       DO 1 J=1,NF
       DO 1 JJ=1,NF
       SUM=0.0
-      DO 2 I=1,NS
+      DO 2 I=1,NDIM
   2   SUM=SUM+A(I,J)*A(I,JJ)
   1   B(J,JJ)=SUM
       call rs(127,nf,B,wvec,1,ZMAT,fv1,fv2,ier)
@@ -2328,7 +2328,7 @@ C
 C
 C  (X'X)-1X'
 C
-      DO 3 I=1,NS
+      DO 3 I=1,NDIM
       DO 3 J=1,NF
       SUM=0.0
       DO 4 JJ=1,NF
@@ -2339,7 +2339,7 @@ C  BETA = (X'X)-1X'Y
 C
       DO 5 JJ=1,NF
       SUM=0.0
-      DO 6 J=1,NS
+      DO 6 J=1,NDIM
   6   SUM=SUM+BB(JJ,J)*Y(J)
   5   V(JJ)=SUM
       RETURN
@@ -2365,21 +2365,21 @@ C
      C               WEIGHT(99),NUMCONGT(200),
      C               ILEGCONG(54001),KWHERE(99999,111),
      C               XBIGLOG(54001,2),KBIGLOG(54001,4)
-      COMMON /MINE/ NS,NQTOT,NPTOT
+      COMMON /MINE/ NDIM,NQTOT,NPTOT
       COMMON /dists/ WDERV(99),ZDF(150000,4),NDEVIT,XDEVIT
   100 FORMAT(8F7.3)
  1001 FORMAT(I4,F5.2,F10.7)
  1002 FORMAT(' R-C ',I3,3I5,F7.3,F13.5,2F10.4,2F7.3)
 C
       XPLOG=0.0
-      DO 8 K=1,NS
+      DO 8 K=1,NDIM
       ZDERV(K)=0.0
       DDERV(K)=0.0
   8   CONTINUE
 C
       KTOT=0
       DO 2 I=1,NPC
-      DO 3 K=1,NS
+      DO 3 K=1,NDIM
       DYES(K)=0.0
       DNO(K)=0.0
       DYES1(K)=0.0
@@ -2400,7 +2400,7 @@ C
          IF(RCVOTE1(I+KTOTP,NEQ).EQV..TRUE.)THEN
             DC=0.0
             DB=0.0
-            DO 4 K=1,NS
+            DO 4 K=1,NDIM
             DC=DC+(-WEIGHT(K)*WEIGHT(K)*DYES(K))
             DB=DB+(-WEIGHT(K)*WEIGHT(K)*DNO(K))
             DCC(K)=DYES(K)
@@ -2416,7 +2416,7 @@ C
          IF(RCVOTE1(I+KTOTP,NEQ).EQV..FALSE.)THEN
             DC=0.0
             DB=0.0
-            DO 5 K=1,NS
+            DO 5 K=1,NDIM
             DC=DC+(-WEIGHT(K)*WEIGHT(K)*DNO(K))
             DB=DB+(-WEIGHT(K)*WEIGHT(K)*DYES(K))
             DCC(K)=DNO(K)
@@ -2427,7 +2427,7 @@ C
             XCC=-1.0
          ENDIF
 C
-         ZS=WEIGHT(NS+1)*(EXP(DC)-EXP(DB))
+         ZS=WEIGHT(NDIM+1)*(EXP(DC)-EXP(DB))
 C
          WWIMJ=ZS*XDEVIT
          KWIMJ=IFIX(ABS(WWIMJ)+.5)
@@ -2442,7 +2442,7 @@ C
          ENDIF
          XPLOG=XPLOG+CDFLOG
          ZGAUSS=EXP(-(ZS*ZS)/2.0)
-         DO 6 K=1,NS
+         DO 6 K=1,NDIM
          ZDERV(K)=ZDERV(K)+(ZGAUSS/ZDISTF)*
      C            (-DCC1(K)*EXP(DC)+DBB1(K)*EXP(DB))
          DDERV(K)=DDERV(K)+XCC*(ZGAUSS/ZDISTF)*
@@ -2473,7 +2473,7 @@ C
      C               WEIGHT(99),NUMCONGT(200),
      C               ILEGCONG(54001),KWHERE(99999,111),
      C               XBIGLOG(54001,2),KBIGLOG(54001,4)
-      COMMON /MINE/ NS,NQTOT,NPTOT
+      COMMON /MINE/ NDIM,NQTOT,NPTOT
       COMMON /dists/ WDERV(99),ZDF(150000,4),NDEVIT,XDEVIT
   203 FORMAT(I5,2I4,8X,I2,F12.5,20F10.4)
   205 FORMAT(I6,2I5,5X,F12.5,20F10.4)
@@ -2502,14 +2502,14 @@ C
 C
 C  ERROR CATCH
 C
-      DO 2 K=1,NS
+      DO 2 K=1,NDIM
       DZSAVE(K)=OLDZ(K)
       IF(ABS(OLDD(K)).LE..001)OLDD(K)=.03
-      DZSAVE(K+NS)=OLDD(K)
+      DZSAVE(K+NDIM)=OLDD(K)
       XXX(K)=0.0
   2   CONTINUE
 C
-      DO 40 K=1,NS
+      DO 40 K=1,NDIM
       DDERVX(K)=0.0
       ZDERVX(K)=0.0
   40  CONTINUE
@@ -2529,20 +2529,20 @@ C
       SUMA=0.0
       SUMB=0.0
       KCATCH=0
-      DO 61 K=1,NS
+      DO 61 K=1,NDIM
       XXX(K)=ZDERVX(K)/FLOAT(KRC)
-      XXX(K+NS)=DDERVX(K)/FLOAT(KRC)
+      XXX(K+NDIM)=DDERVX(K)/FLOAT(KRC)
       SUMA=SUMA+XXX(K)**2
-      SUMB=SUMB+XXX(K+NS)**2
-      IF(ABS(XXX(K+NS)).LE..0001)KCATCH=KCATCH+1
+      SUMB=SUMB+XXX(K+NDIM)**2
+      IF(ABS(XXX(K+NDIM)).LE..0001)KCATCH=KCATCH+1
   61  CONTINUE
 C
 C  ERROR CATCH IF ZERO DERIVATIVE
 C
       KEXIT=0
-      IF(KCATCH.EQ.NS)THEN
-         DO 661 K=1,NS
-         DZSAVE(K+NS)=OLDD(K)
+      IF(KCATCH.EQ.NDIM)THEN
+         DO 661 K=1,NDIM
+         DZSAVE(K+NDIM)=OLDD(K)
          KEXIT=1
   661    CONTINUE
       ENDIF
@@ -2563,16 +2563,16 @@ C
 C
       DO 212 KK=1,NINC
       SUM=0.0
-      DO 24 K=1,NS
+      DO 24 K=1,NDIM
 C
 C  *****
 C   CHECK FOR SIGN OF DERIVATIVE FOR GRADIENT!!!!!!!!
 C  *****
 C
-      OLDD(K)=DZSAVE(K+NS)-XINCD*XXX(K+NS)
+      OLDD(K)=DZSAVE(K+NDIM)-XINCD*XXX(K+NDIM)
 C
   24  CONTINUE
-      DO 240 K=1,NS
+      DO 240 K=1,NDIM
       DDERVX(K)=0.0
       ZDERVX(K)=0.0
   240 CONTINUE
@@ -2586,11 +2586,11 @@ C
 C
       YGMP(KK)=GMP
       LLL(KK)=KK
-      DO 222 K=1,NS
+      DO 222 K=1,NDIM
       YGAMMA(KK,K)=OLDZ(K)
-      YGAMMA(KK,K+NS)=OLDD(K)
+      YGAMMA(KK,K+NDIM)=OLDD(K)
       XXXSAVE(KK,K)=XXX(K)
-      XXXSAVE(KK,K+NS)=XXX(K+NS)
+      XXXSAVE(KK,K+NDIM)=XXX(K+NDIM)
   222 CONTINUE
       YLOG(KK)=XPLOG
 C
@@ -2603,14 +2603,14 @@ C  FIND MAXIMUM ON BEST DIRECTION THROUGH THE SPACE
 C
       CALL RSORT(YGMP,NNINC,LLL)
       KEXIT=0
-      DO 224 K=1,NS
+      DO 224 K=1,NDIM
       OLDZ(K)=YGAMMA(LLL(NNINC),K)
-      OLDD(K)=YGAMMA(LLL(NNINC),K+NS)
+      OLDD(K)=YGAMMA(LLL(NNINC),K+NDIM)
       DZSAVE(K)=OLDZ(K)
-      DZSAVE(K+NS)=OLDD(K)
+      DZSAVE(K+NDIM)=OLDD(K)
       IF(ABS(OLDD(K)).LE..001)THEN
          OLDD(K)=.03
-         DZSAVE(K+NS)=OLDD(K)
+         DZSAVE(K+NDIM)=OLDD(K)
          KEXIT=1
       ENDIF
   224 CONTINUE
@@ -2649,13 +2649,13 @@ C ***********
 C
       DO 98 IIII=1,10
 C
-      DO 32 K=1,NS
+      DO 32 K=1,NDIM
       DZSAVE(K)=OLDZ(K)
-      DZSAVE(K+NS)=OLDD(K)
+      DZSAVE(K+NDIM)=OLDD(K)
       XXX(K)=0.0
   32  CONTINUE
 C
-      DO 33 K=1,NS
+      DO 33 K=1,NDIM
       DDERVX(K)=0.0
       ZDERVX(K)=0.0
   33  CONTINUE
@@ -2674,11 +2674,11 @@ C
       GMP=EXP(XPLOG/FLOAT(KRC))
       SUMA=0.0
       SUMB=0.0
-      DO 34 K=1,NS
+      DO 34 K=1,NDIM
       XXX(K)=ZDERVX(K)/FLOAT(KRC)
-      XXX(K+NS)=DDERVX(K)/FLOAT(KRC)
+      XXX(K+NDIM)=DDERVX(K)/FLOAT(KRC)
       SUMA=SUMA+XXX(K)**2
-      SUMB=SUMB+XXX(K+NS)**2
+      SUMB=SUMB+XXX(K+NDIM)**2
   34  CONTINUE
 C
 C
@@ -2701,7 +2701,7 @@ C
 C
       DO 213 KK=1,NINC
       SUM=0.0
-      DO 35 K=1,NS
+      DO 35 K=1,NDIM
 C
 C  *****
 C   CHECK FOR SIGN OF DERIVATIVE FOR GRADIENT!!!!!!!!
@@ -2720,10 +2720,10 @@ C  RESET LEGISLATOR POINT TO SURFACE OF UNIT HYPERSPHERE AND
 C    CALCULATE DERIVATIVES AND LOG-LIKELIHOODS.  THEN EXIT
 C    SEARCH LOOP
 C
-         DO 36 K=1,NS
+         DO 36 K=1,NDIM
          OLDZ(K)=OLDZ(K)/SQRT(SUM)
   36     CONTINUE
-         DO 37 K=1,NS
+         DO 37 K=1,NDIM
          DDERVX(K)=0.0
          ZDERVX(K)=0.0
   37     CONTINUE
@@ -2734,16 +2734,16 @@ C
 C
          YGMP(KK)=GMP
          LLL(KK)=KK
-         DO 38 K=1,NS
+         DO 38 K=1,NDIM
          YGAMMA(KK,K)=OLDZ(K)
-         YGAMMA(KK,K+NS)=OLDD(K)
+         YGAMMA(KK,K+NDIM)=OLDD(K)
          XXXSAVE(KK,K)=XXX(K)
-         XXXSAVE(KK,K+NS)=XXX(K+NS)
+         XXXSAVE(KK,K+NDIM)=XXX(K+NDIM)
   38     CONTINUE
          YLOG(KK)=XPLOG
          GO TO 2113
       ENDIF
-      DO 39 K=1,NS
+      DO 39 K=1,NDIM
       DDERVX(K)=0.0
       ZDERVX(K)=0.0
   39  CONTINUE
@@ -2757,11 +2757,11 @@ C
 C
       YGMP(KK)=GMP
       LLL(KK)=KK
-      DO 41 K=1,NS
+      DO 41 K=1,NDIM
       YGAMMA(KK,K)=OLDZ(K)
-      YGAMMA(KK,K+NS)=OLDD(K)
+      YGAMMA(KK,K+NDIM)=OLDD(K)
       XXXSAVE(KK,K)=XXX(K)
-      XXXSAVE(KK,K+NS)=XXX(K+NS)
+      XXXSAVE(KK,K+NDIM)=XXX(K+NDIM)
   41  CONTINUE
       YLOG(KK)=XPLOG
 C
@@ -2783,11 +2783,11 @@ C
 C      IF(IICONG.EQ.45.AND.NEQ.EQ.20)THEN
 C      IPHASE=1
 C      ENDIF
-      DO 42 K=1,NS
+      DO 42 K=1,NDIM
       OLDZ(K)=YGAMMA(LLL(NNINC),K)
-      OLDD(K)=YGAMMA(LLL(NNINC),K+NS)
+      OLDD(K)=YGAMMA(LLL(NNINC),K+NDIM)
       DZSAVE(K)=OLDZ(K)
-      DZSAVE(K+NS)=OLDD(K)
+      DZSAVE(K+NDIM)=OLDD(K)
   42  CONTINUE
 C
 C  STORE GMP
