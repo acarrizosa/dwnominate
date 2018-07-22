@@ -251,8 +251,6 @@ make_rc_df = function(res, params) {
 #'   \code{nomObject} or \code{OCobject}) providing starting estimates
 #'   of legislator ideologies. If not provided, dwnominate will run
 #'   \code{wnominate} or \code{oc} to get starting values.
-#' @param sessions A vector of length 2 providing the first and last
-#'   sessions to include. Defaults to \code{c(1, length(rc_list))}.
 #' @param dims The number of dimensions to estimate. Can be either 1
 #'   or 2.
 #' @param model The degree of the polynomial representing changes in
@@ -284,7 +282,7 @@ make_rc_df = function(res, params) {
 #' results <- dwnominate(senate)
 #' plot(results)
 #' @export
-dwnominate = function(rc_list, id=NULL, start=NULL, sessions=NULL,
+dwnominate = function(rc_list, id=NULL, start=NULL,
                       dims=2, model=1, niter=4, beta=5.9539,
                       w=0.3463, polarity=NULL, ...) {
   if (!is.null(id)) {
@@ -308,10 +306,7 @@ dwnominate = function(rc_list, id=NULL, start=NULL, sessions=NULL,
   nrc = length(rc_list)
   if (nrc < 2)
     stop('rc_list must contain at least 2 rollcall objects')
-  if (is.null(sessions))
-    sessions = c(1, nrc)
-  if (any(sessions < 1) || any(sessions > nrc))
-    stop('sessions must be between 1 and length(rc_list)')
+  sessions = c(1, nrc)
   iters = c(1, niter)
   # should check that membership overlaps
   
