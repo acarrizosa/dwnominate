@@ -9,7 +9,7 @@ C
 C ***********************************************************************
 C
 
-C     with minor changes by William May for use with R
+C     extensively reorganized by William May for clarity and use with R
       
       SUBROUTINE dwnom(NDIMIN, NMODELIN, NCONGIN, NITERIN, WEIGHTSIN,
      $     NRCIN, IRCCONGIN, DYNIN, ZMIDIN, MCONGIN, NROWRCT, NCOLRCTIN,
