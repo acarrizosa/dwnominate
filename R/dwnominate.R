@@ -197,10 +197,14 @@ write_input_files = function(rc_list, start, sessions, dims,
 make_leg_df = function(res, params, party_dict) {
   ## organize legislator data
   ndims = res[[1]]
+  nrows = length(params$ncong)
   coords = paste0('coord', 1:ndims, 'D')
+  xdata = matrix(res[[18]], nrow=nrows, ncol=9)[, 1:ndims]
+  xbiglog = matrix(res[[27]], nrow=nrows, ncol=2)
+  kbiglog = matrix(res[[28]], nrow=nrows, ncol=4)
   if (ndims == 1) {
     leg_data = c(res[16:17], params[c('istate', 'idist', 'ksta', 'iparty', 'lname')],
-                 res[23], res[28:31])
+                 list(xdata), list(xbiglog, kbiglog), res[29:30])
     legnames = c('session', 'ID', 'stateID', 'district', 'state', 
                  'partyID', 'name', coords,
                  'loglikelihood', 'loglikelihood_check', 'numVotes', 'numVotes_check',
@@ -208,7 +212,7 @@ make_leg_df = function(res, params, party_dict) {
                  'GMP', 'GMP_check')
   } else {
     leg_data = c(res[16:17], params[c('istate', 'idist', 'ksta', 'iparty', 'lname')],
-                 res[23:31])
+                 list(xdata), res[23:26], list(xbiglog, kbiglog), res[29:30])
     ses = paste0('se', 1:ndims, 'D')
     vars = paste0('var', 1:ndims, 'D')
     legnames = c('session', 'ID', 'stateID', 'district', 'state', 
@@ -225,9 +229,11 @@ make_leg_df = function(res, params, party_dict) {
 
 make_rc_df = function(res, params) {
   ## organize rollcall data
-  df = cbind.data.frame(res[[7]], params$inum, res[[33]], res[[32]])
-  ## fix df names
   ndims = res[[1]]
+  dyn = matrix(res[[8]], nrow=length(params$icong), ncol=ndims)
+  zmid = matrix(res[[9]], nrow=length(params$icong), ncol=ndims)
+  df = cbind.data.frame(res[[7]], params$inum, zmid, dyn)
+  ## fix df names
   midcols = paste0('midpoint', 1:ndims, 'D')
   spreadcols = paste0('spread', 1:ndims, 'D')
   est_cols = c(midcols, spreadcols)
@@ -356,29 +362,27 @@ dwnominate = function(rc_list, id=NULL, start=NULL,
                              model, iters, beta, w, id)
   
   # run DW-NOMINATE
-  # change line 40 of DW-NOMINATE.FOR !!
   nomstart = file.path(getwd(), 'DW-NOMSTART.DAT')
   start_time = Sys.time()
   nbills = length(params$icong)
   nlegs = length(params$ncong)
-  xdata = matrix(0.0, nrow=nlegs, ncol=dims)
-  sdx1 = rep(0.0, nlegs)
-  sdx2 = rep(0.0, nlegs)
-  varx1 = rep(0.0, nlegs)
-  varx2 = rep(0.0, nlegs)
-  xbiglog = matrix(0.0, nrow=nlegs, ncol=2)
+  xdata = matrix(0.0, nrow=nlegs, ncol=9)
+  xdata[, 1:dims] = params$xdata
+  sdx1 = as.single(rep(0.0, nlegs))
+  sdx2 = as.single(rep(0.0, nlegs))
+  varx1 = as.single(rep(0.0, nlegs))
+  varx2 = as.single(rep(0.0, nlegs))
+  xbiglog = as.single(matrix(0.0, nrow=nlegs, ncol=2))
   kbiglog = matrix(0L, nrow=nlegs, ncol=4)
-  gmpa = rep(0.0, nlegs)
-  gmpb = rep(0.0, nlegs)
-  dyn = matrix(0.0, nrow=nbills, ncol=dims)
-  zmid = matrix(0.0, nrow=nbills, ncol=dims)
+  gmpa = as.single(rep(0.0, nlegs))
+  gmpb = as.single(rep(0.0, nlegs))
   res = .Fortran('dwnom',
            ## control file (DW-NOMSTART.DAT) params:
            params$nomstart_in[1], params$nomstart_in[2],
            params$nomstart_in[4], params$nomstart_in[6],
            params$weights,
            ## bill file (rollcall_input.dat) params:
-           nbills, params$icong, params$dyn, params$zmid,
+           nbills, params$icong, as.single(params$dyn), as.single(params$zmid),
            ## session file (session_info.num) params:
            params$mcong,
            ## transposed rollcall file
@@ -386,15 +390,13 @@ dwnominate = function(rc_list, id=NULL, start=NULL,
            params$rcvotet1, params$rcvotet9,
            ## legislator input file
            nlegs, params$ncong, params$id1,
-           params$xdata,
+           as.single(xdata),
            ## rollcall file
            nrow(params$rcvote1), ncol(params$rcvote1),
            params$rcvote1, params$rcvote9,
            ## legislator output objects
-           xdata, sdx1, sdx2, varx1, varx2,
-           xbiglog, kbiglog, gmpa, gmpb,
-           ## rollcall output objects
-           dyn, zmid)
+           sdx1, sdx2, varx1, varx2,
+           xbiglog, kbiglog, gmpa, gmpb)
   
   runtime = Sys.time() - start_time
   units(runtime) = 'mins'
