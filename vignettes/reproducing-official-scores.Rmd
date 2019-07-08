@@ -1,0 +1,49 @@
+---
+title: "Approximately Reproducing Official DW-NOMINATE Scores"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Approximately Reproducing Official DW-NOMINATE Scores}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+The Congressional DW-NOMINATE scores provided by Keith Poole and the voteview team underpin massive amounts of political science research, and it would be extremely useful to be able to reproduce the scores and document exactly how they were created. Unfortunately this can't be done, as the scores' creators -- despite having produced a whole raft of papers and books outlining the procedure -- are unwilling to provide the code itself.
+
+This leaves us with a whole host of intertwined issues that prevent us from exactly reproducing the scores:
+
+- Software versions could be different. This package relies on a DW-NOMINATE code example, along with R packages for W-NOMINATE and basic space analyses. But different versions of the code could have been used to generate the official scores.
+- The choice of compiler appears to influence the generated scores. We don't know what compiler was used to compile the code (except that it wasn't gfortran).
+- The data could be different. I'm getting data from voteview but I don't know if that data has changed since the last scores were created.
+- Code changes in `dwnominate`: I've made minor changes to the original fortran example code, and these have small effects on the calculated scores. (Most importantly, I've replaced proprietary IMSL code with Lapack so I can legally distribute this package.)
+- Part of the procedure for creating starting estimates is not explained in any publication ("pieced together").
+
+Given all this, exactly reproducing the scores is unlikely without more cooperation from voteview. But we do have enough information to create roughly equivalent scores, even if formal reproduceability is unattainable.
+
+# Data
+
+get vote data from voteview
+
+# Starting Estimates
+
+get wnominate scores for each congress
+
+and common space scores, dealing with the piecing together
+
+# DW-NOMINATE
+
+calculate scores
+
+```{r setup}
+library(dwnominate)
+```
+
+# Comparison
+
+# Updated Results
