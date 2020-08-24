@@ -234,8 +234,10 @@ make_leg_df = function(res, params, party_dict, leg_dict) {
   }
   df = do.call(cbind.data.frame, leg_data)
   names(df) = legnames
-  df$party = names(party_dict)[df$party]
   df$ID = names(leg_dict)[df$ID]
+  if(any(!is.na(names(party_dict)))){
+    df$party = names(party_dict)[df$party]
+  }
   df = df[, -grep('_check$', names(df))]
   df
 }
@@ -364,14 +366,23 @@ dwnominate = function(rc_list, id=NULL, start=NULL, sessions=NULL,
   iters = c(1, niter + 1)
   # should check that membership overlaps
   
+  #allow for user to specify rc_list without parties
   parties = unique(unlist(lapply(rc_list,
       function(x) x$legis.data$party)))
-  party_dict = setNames(1:length(parties), parties)
   
-  for (n in 1:length(rc_list)) {
-    rc_list[[n]]$legis.data$party =
-      party_dict[as.character(rc_list[[n]]$legis.data$party)]
+  if(any(any(!is.na(parties)))){
+    party_dict = setNames(1:length(parties), parties)
+    
+    for (n in 1:length(rc_list)) {
+      rc_list[[n]]$legis.data$party =
+        party_dict[as.character(rc_list[[n]]$legis.data$party)]
+    }
+  } else{
+    for (n in 1:length(rc_list)) {
+      rc_list[[n]]$legis.data$party = ""
+    }
   }
+  
   get_start = is.null(start)
   if (!get_start) {
     if (class(start) == 'OCobject' && start$dimensions == 1) {
